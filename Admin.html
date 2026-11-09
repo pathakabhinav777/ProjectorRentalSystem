@@ -152,6 +152,15 @@
     var t = $('toast'); t.textContent = msg; t.className = 'toast show' + (bad ? ' bad' : '');
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.className = 'toast'; }, 3200);
   }
+  // Pop-up confirm() is blocked inside Apps Script pages, so destructive buttons need two taps.
+  function twoTap(btn, armedText, fn) {
+    var label = btn.textContent, timer = null;
+    return function () {
+      if (timer) { clearTimeout(timer); timer = null; btn.textContent = label; fn(); return; }
+      btn.textContent = armedText;
+      timer = setTimeout(function () { timer = null; btn.textContent = label; }, 4000);
+    };
+  }
   function errMsg(e) { return (e && e.message ? e.message : String(e)).replace(/^Error:\s*/, ''); }
 
   async function act(btn, fn, args, okMsg) {
@@ -233,11 +242,11 @@
         var c = el('button', 'btn ok sm', 'Confirm');
         c.onclick = function () { act(c, 'adminConfirm', [r.id], 'Confirmed and added to your calendar'); };
         var x = el('button', 'btn bad sm', 'Reject');
-        x.onclick = function () { if (confirm('Reject ' + r.name + "'s booking for " + pretty(r.date) + '?')) act(x, 'adminCancel', [r.id], 'Rejected. The night is free again.'); };
+        x.onclick = twoTap(x, 'Tap again to reject', function () { act(x, 'adminCancel', [r.id], 'Rejected. The night is free again.'); });
         acts.appendChild(c); acts.appendChild(x);
       } else if (r.status === 'CONFIRMED') {
         var cc = el('button', 'btn bad sm', 'Cancel booking');
-        cc.onclick = function () { if (confirm('Cancel ' + r.name + "'s booking for " + pretty(r.date) + '?')) act(cc, 'adminCancel', [r.id], 'Cancelled. The night is free again.'); };
+        cc.onclick = twoTap(cc, 'Tap again to cancel', function () { act(cc, 'adminCancel', [r.id], 'Cancelled. The night is free again.'); });
         acts.appendChild(cc);
       } else {
         var u = el('button', 'btn plain sm', 'Unblock');

@@ -83,6 +83,10 @@
     .day:disabled { cursor: not-allowed; }
     .day.empty { visibility: hidden; }
     .day.past { color: var(--dim); background: transparent; }
+    .day.off { color: var(--dim); background: repeating-linear-gradient(135deg, rgba(255,255,255,.03) 0 4px, transparent 4px 8px); }
+    .closed { margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: rgba(139,108,255,.1); border: 1px solid rgba(139,108,255,.25); color: #c9bcff; font-size: 13px; font-weight: 600; }
+    footer a { color: var(--dim); text-decoration: none; border-bottom: 1px dotted var(--dim); }
+    footer a:hover { color: var(--muted); }
     .day.booked { color: var(--dim); background: rgba(255,107,107,.07); text-decoration: line-through; text-decoration-color: var(--bad); }
     .day.pending { color: var(--dim); background: rgba(255,181,71,.07); }
     .day.pending::after { content: ""; position: absolute; bottom: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
@@ -214,7 +218,7 @@
     <section class="card step reveal" id="s1" style="animation-delay:.1s">
       <div class="step-head">
         <div class="num">1</div>
-        <div><h2>Pick your night</h2><p>Grey nights are taken.</p></div>
+        <div><h2>Pick your night</h2><p id="windowNote">Book up to 7 days ahead.</p></div>
       </div>
       <div class="cal-top">
         <button type="button" class="nav" id="prev" aria-label="Previous month">‹</button>
@@ -228,6 +232,7 @@
         <span><i style="background:var(--amber)"></i>Waiting for confirmation</span>
         <span><i style="background:var(--bad)"></i>Booked</span>
       </div>
+      <div class="closed" id="closedNote" hidden></div>
       <div class="picked" id="picked"></div>
     </section>
 
@@ -293,7 +298,7 @@
     <p>I'll check your payment and WhatsApp you to confirm.<br>No need to book again.</p>
   </section>
 
-  <footer>Hostel projector rental</footer>
+  <footer>Hostel projector rental · <a id="ownerLink" href="#">Owner</a></footer>
 </main>
 
 <script>
@@ -302,7 +307,8 @@
   const UPI_ID = "9886930505@upi";
   const PAYEE_NAME = "Projector Rental";
   const PRICE = 70;
-  const MAX_DAYS_AHEAD = 60;
+  let windowDays = 7;                             // server sends the real value
+  let blackouts = [["2026-12-05", "2027-01-02"]]; // server sends the real value
   // ====================
 
   const $ = id => document.getElementById(id);
@@ -311,9 +317,23 @@
   const fromDs = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
   const pretty = s => fromDs(s).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
 
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const maxDay = new Date(today); maxDay.setDate(maxDay.getDate() + MAX_DAYS_AHEAD);
-  const TODAY = ds(today), MAX = ds(maxDay);
+  let today, maxDay, TODAY, MAX;
+  function setWindow(todayStr) {
+    today = todayStr ? fromDs(todayStr) : new Date();
+    today.setHours(0, 0, 0, 0);
+    maxDay = new Date(today); maxDay.setDate(maxDay.getDate() + windowDays);
+    TODAY = ds(today); MAX = ds(maxDay);
+    $("windowNote").textContent = "Book up to " + windowDays + " days ahead.";
+    const shortDate = s => fromDs(s).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+    const near = blackouts.filter(b => b[1] >= TODAY && b[0] <= ds(new Date(today.getTime() + 45 * 864e5)));
+    $("closedNote").textContent = near.length
+      ? "Closed " + near.map(b => shortDate(b[0]) + " – " + shortDate(b[1])).join(", ") + "."
+      : "";
+    $("closedNote").hidden = !near.length;
+  }
+  const isBlackout = key => blackouts.some(b => key >= b[0] && key <= b[1]);
+  setWindow();
+  $("ownerLink").href = SCRIPT_URL + "?action=admin";
 
   let taken = new Map();   // "YYYY-MM-DD" -> "booked" | "pending"
   let selected = null;
@@ -342,6 +362,7 @@
       b.textContent = d;
       const st = taken.get(key);
       if (key < TODAY || key > MAX) { b.classList.add("past"); b.disabled = true; }
+      else if (isBlackout(key)) { b.classList.add("off"); b.disabled = true; b.title = "Not available"; }
       else if (st === "booked") { b.classList.add("booked"); b.disabled = true; b.title = "Booked"; }
       else if (st === "pending") { b.classList.add("pending"); b.disabled = true; b.title = "Waiting for confirmation"; }
       if (key === TODAY) b.classList.add("today");
@@ -489,6 +510,10 @@
       const res = await fetch(SCRIPT_URL + "?action=dates&_t=" + Date.now());
       const data = await res.json();
       taken = new Map((data.dates || []).map(x => [String(x.date), x.status === "booked" ? "booked" : "pending"]));
+      if (Number(data.windowDays) > 0) windowDays = Number(data.windowDays);
+      if (Array.isArray(data.blackouts)) blackouts = data.blackouts.map(b => [String(b[0]), String(b[1])]);
+      setWindow(/^\d{4}-\d{2}-\d{2}$/.test(data.today) ? data.today : null);
+      if (selected && (selected < TODAY || selected > MAX || isBlackout(selected))) { selected = null; $("picked").classList.remove("show"); $("s1").classList.remove("done"); }
       if (selected && taken.has(selected)) { selected = null; $("picked").classList.remove("show"); $("s1").classList.remove("done"); }
     } catch (e) { /* calendar still works; server re-checks on submit */ }
     renderCal();

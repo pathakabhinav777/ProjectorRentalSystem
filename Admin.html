@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070b; --panel: #15151e; --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.16);
+      --text: #f3f2f8; --muted: #9b99ab; --dim: #5d5b6c;
+      --amber: #ffb547; --pink: #ff5f8f; --violet: #8b6cff; --ok: #3ddc97; --bad: #ff6b6b;
+      --grad: linear-gradient(135deg, #ffb547 0%, #ff5f8f 50%, #8b6cff 100%);
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); }
+    body { font: 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; background: radial-gradient(600px 400px at 0% 0%, rgba(255,95,143,.18), transparent), radial-gradient(500px 400px at 100% 40%, rgba(139,108,255,.16), transparent), var(--bg); min-height: 100vh; }
+    button, input { font: inherit; color: inherit; }
+    main { max-width: 560px; margin: 0 auto; padding: 24px 16px 60px; }
+    h1 { font-size: 26px; margin: 0; font-weight: 800; }
+    h1 span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    h2 { font-size: 16px; margin: 0 0 12px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .top a { color: var(--muted); font-size: 13px; text-decoration: none; border: 1px solid var(--line); padding: 7px 12px; border-radius: 999px; }
+    .sub { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 18px; margin-top: 14px; animation: rise .5s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+
+    /* Tonight switch */
+    .tonight { display: flex; align-items: center; gap: 16px; }
+    .tonight .txt { flex: 1; }
+    .tonight .big { font-size: 18px; font-weight: 800; }
+    .tonight .small { color: var(--muted); font-size: 13px; }
+    .switch { flex: none; width: 74px; height: 42px; border-radius: 999px; border: 0; cursor: pointer; position: relative; background: #3a2028; transition: background .3s; }
+    .switch::after { content: ""; position: absolute; top: 5px; left: 5px; width: 32px; height: 32px; border-radius: 50%; background: #fff; transition: transform .35s cubic-bezier(.3,1.5,.5,1); box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+    .switch.on { background: var(--ok); }
+    .switch.on::after { transform: translateX(32px); }
+    .switch:disabled { opacity: .5; cursor: wait; }
+    .booked-tonight { padding: 12px 14px; border-radius: 14px; background: rgba(255,181,71,.08); border: 1px solid rgba(255,181,71,.25); }
+
+    /* Form */
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    input[type=date], input[type=text], input[type=password] { flex: 1; min-width: 140px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); outline: none; }
+    input:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,95,143,.15); }
+    .btn { padding: 12px 16px; border-radius: 12px; border: 0; font-weight: 700; cursor: pointer; transition: transform .12s, opacity .2s; }
+    .btn:active { transform: scale(.96); }
+    .btn:disabled { opacity: .5; cursor: wait; }
+    .btn.main { background: var(--grad); color: #160b14; }
+    .btn.ok { background: var(--ok); color: #06210f; }
+    .btn.bad { background: transparent; color: var(--bad); border: 1px solid rgba(255,107,107,.4); }
+    .btn.plain { background: rgba(255,255,255,.06); border: 1px solid var(--line-strong); }
+    .btn.sm { padding: 8px 12px; font-size: 13px; border-radius: 10px; }
+
+    /* List */
+    .item { padding: 14px 0; border-top: 1px solid var(--line); animation: rise .4s ease both; }
+    .item:first-child { border-top: 0; padding-top: 0; }
+    .item .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .item .date { font-weight: 800; }
+    .pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; }
+    .pill.PENDING { background: rgba(255,181,71,.15); color: var(--amber); }
+    .pill.CONFIRMED { background: rgba(61,220,151,.15); color: var(--ok); }
+    .pill.BLOCKED { background: rgba(139,108,255,.18); color: #b7a6ff; }
+    .item .meta { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
+    .item .meta b { color: var(--text); font-weight: 600; }
+    .item .meta a { color: var(--amber); }
+    .item .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+    .empty { color: var(--muted); font-size: 14px; }
+
+    /* Login */
+    #login { max-width: 380px; margin: 12vh auto 0; text-align: center; }
+    #login .card { text-align: left; }
+    .err { color: #ffb3b3; font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 30px); opacity: 0; background: #23232f; border: 1px solid var(--line-strong); padding: 12px 18px; border-radius: 14px; font-weight: 600; font-size: 14px; transition: all .3s; max-width: calc(100% - 32px); z-index: 9; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .toast.bad { border-color: rgba(255,107,107,.5); color: #ffb3b3; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+<main>
+  <section id="login" hidden>
+    <h1>Owner <span>panel</span></h1>
+    <div class="card">
+      <h2>Log in</h2>
+      <div class="row">
+        <input type="password" id="pw" placeholder="Password" autocomplete="current-password">
+        <button class="btn main" id="loginBtn">Log in</button>
+      </div>
+      <div class="err" id="loginErr"></div>
+    </div>
+  </section>
+
+  <section id="panel" hidden>
+    <div class="top">
+      <h1>Owner <span>panel</span></h1>
+      <a id="siteLink" href="#">Booking site ↗</a>
+    </div>
+    <p class="sub" id="todayLabel"></p>
+
+    <div class="card">
+      <h2>Tonight</h2>
+      <div id="tonight"></div>
+    </div>
+
+    <div class="card">
+      <h2>Block a night</h2>
+      <p class="sub">Someone booked with you directly? Block that night so nobody else can take it.</p>
+      <div class="row">
+        <input type="date" id="blockDate">
+        <input type="text" id="blockNote" maxlength="60" placeholder="Who? (optional)">
+      </div>
+      <div class="row" style="margin-top:8px"><button class="btn main" id="blockBtn" style="flex:1">Block this night</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Upcoming</h2>
+      <div id="list"></div>
+    </div>
+
+    <div class="card">
+      <h2>Settings</h2>
+      <p class="sub" id="rulesLabel"></p>
+      <p class="sub" id="pwLabel"></p>
+      <div class="row">
+        <input type="password" id="newPw" placeholder="New password (6+ characters)" autocomplete="new-password">
+        <button class="btn plain" id="pwBtn">Save password</button>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+  var KEY = <?!= JSON.stringify(key) ?>;
+  var state = null;
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function call(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return new Promise(function (res, rej) {
+      var r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
+      r[fn].apply(r, args);
+    });
+  }
+  function pretty(s, long) {
+    var p = s.split('-').map(Number);
+    return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-IN', long ? { weekday: 'long', day: 'numeric', month: 'long' } : { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  var toastTimer;
+  function toast(msg, bad) {
+    var t = $('toast'); t.textContent = msg; t.className = 'toast show' + (bad ? ' bad' : '');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.className = 'toast'; }, 3200);
+  }
+  function errMsg(e) { return (e && e.message ? e.message : String(e)).replace(/^Error:\s*/, ''); }
+
+  async function act(btn, fn, args, okMsg) {
+    if (btn) btn.disabled = true;
+    try {
+      state = await call.apply(null, [fn, KEY].concat(args));
+      render();
+      if (okMsg) toast(okMsg);
+    } catch (e) {
+      toast(errMsg(e), true);
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  function render() {
+    var s = state;
+    $('todayLabel').textContent = 'Today is ' + pretty(s.today, true);
+    $('siteLink').href = s.siteUrl;
+    $('blockDate').min = s.today;
+    if (!$('blockDate').value) $('blockDate').value = s.today;
+    $('rulesLabel').textContent = 'People can book up to ' + s.windowDays + ' days ahead. Closed: ' +
+      s.blackouts.map(function (b) { return pretty(b[0]) + ' – ' + pretty(b[1]); }).join(', ') + '.';
+    $('pwLabel').textContent = s.hasPassword
+      ? 'A password is set. You can log in from the "Owner" link at the bottom of the booking site.'
+      : 'Set a password so you can log in from the "Owner" link at the bottom of the booking site.';
+
+    // Tonight
+    var box = $('tonight'); box.replaceChildren();
+    var tonight = s.rows.filter(function (r) { return r.date === s.today; })[0];
+    if (tonight && tonight.status !== 'BLOCKED') {
+      var b = el('div', 'booked-tonight');
+      b.appendChild(el('div', '', 'Tonight is booked by ' + tonight.name + (tonight.status === 'PENDING' ? ' (waiting for you to confirm)' : '') + '.'));
+      box.appendChild(b);
+    } else {
+      var wrap = el('div', 'tonight');
+      var txt = el('div', 'txt');
+      var on = !tonight;
+      txt.appendChild(el('div', 'big', on ? 'Bookings open' : 'Bookings paused'));
+      txt.appendChild(el('div', 'small', on
+        ? 'Projector in use? Flip this off and nobody can book tonight.'
+        : 'Nobody can book tonight. Turns back on by itself tomorrow.'));
+      var sw = el('button', 'switch' + (on ? ' on' : ''));
+      sw.setAttribute('aria-label', on ? 'Pause bookings for tonight' : 'Open bookings for tonight');
+      sw.onclick = function () {
+        if (on) act(sw, 'adminBlock', [s.today, 'In use'], 'Paused for tonight');
+        else act(sw, 'adminCancel', [tonight.id], 'Bookings open again for tonight');
+      };
+      wrap.appendChild(txt); wrap.appendChild(sw);
+      box.appendChild(wrap);
+    }
+
+    // Upcoming list
+    var list = $('list'); list.replaceChildren();
+    if (!s.rows.length) list.appendChild(el('div', 'empty', 'Nothing booked yet.'));
+    s.rows.forEach(function (r, i) {
+      var it = el('div', 'item'); it.style.animationDelay = (i * 0.04) + 's';
+      var head = el('div', 'head');
+      head.appendChild(el('span', 'date', pretty(r.date)));
+      head.appendChild(el('span', 'pill ' + r.status, r.status === 'BLOCKED' ? 'Blocked' : r.status.toLowerCase()));
+      it.appendChild(head);
+
+      var meta = el('div', 'meta');
+      if (r.status === 'BLOCKED') {
+        meta.appendChild(el('b', '', r.name));
+      } else {
+        meta.appendChild(el('b', '', r.name));
+        meta.appendChild(document.createTextNode(' · ' + r.block + ', ' + r.room + ' · pickup ' + r.pickup.replace('Block 9 - ', '')));
+        meta.appendChild(el('br'));
+        var wa = el('a', '', 'WhatsApp ' + r.phone);
+        wa.href = 'https://wa.me/91' + encodeURIComponent(r.phone); wa.target = '_blank';
+        meta.appendChild(wa);
+        meta.appendChild(document.createTextNode(' · UTR '));
+        meta.appendChild(el('b', '', r.utr));
+      }
+      it.appendChild(meta);
+
+      var acts = el('div', 'acts');
+      if (r.status === 'PENDING') {
+        var c = el('button', 'btn ok sm', 'Confirm');
+        c.onclick = function () { act(c, 'adminConfirm', [r.id], 'Confirmed and added to your calendar'); };
+        var x = el('button', 'btn bad sm', 'Reject');
+        x.onclick = function () { if (confirm('Reject ' + r.name + "'s booking for " + pretty(r.date) + '?')) act(x, 'adminCancel', [r.id], 'Rejected. The night is free again.'); };
+        acts.appendChild(c); acts.appendChild(x);
+      } else if (r.status === 'CONFIRMED') {
+        var cc = el('button', 'btn bad sm', 'Cancel booking');
+        cc.onclick = function () { if (confirm('Cancel ' + r.name + "'s booking for " + pretty(r.date) + '?')) act(cc, 'adminCancel', [r.id], 'Cancelled. The night is free again.'); };
+        acts.appendChild(cc);
+      } else {
+        var u = el('button', 'btn plain sm', 'Unblock');
+        u.onclick = function () { act(u, 'adminCancel', [r.id], 'Unblocked'); };
+        acts.appendChild(u);
+      }
+      it.appendChild(acts);
+      list.appendChild(it);
+    });
+  }
+
+  $('blockBtn').onclick = function () {
+    var d = $('blockDate').value;
+    if (!d) return toast('Pick a date first', true);
+    act($('blockBtn'), 'adminBlock', [d, $('blockNote').value], pretty(d) + ' blocked').then(function () {
+      $('blockNote').value = ''; $('blockBtn').disabled = false;
+    });
+  };
+
+  $('pwBtn').onclick = async function () {
+    var b = $('pwBtn'); b.disabled = true;
+    try { toast(await call('adminSetPassword', KEY, $('newPw').value)); $('newPw').value = ''; state.hasPassword = true; render(); }
+    catch (e) { toast(errMsg(e), true); }
+    b.disabled = false;
+  };
+
+  async function login() {
+    var b = $('loginBtn'); b.disabled = true; $('loginErr').textContent = '';
+    try { KEY = await call('adminLogin', $('pw').value); await start(); }
+    catch (e) { $('loginErr').textContent = errMsg(e); }
+    b.disabled = false;
+  }
+  $('loginBtn').onclick = login;
+  $('pw').onkeydown = function (e) { if (e.key === 'Enter') login(); };
+
+  async function start() {
+    try {
+      state = await call('adminState', KEY);
+      $('login').hidden = true; $('panel').hidden = false;
+      render();
+    } catch (e) {
+      KEY = ''; $('panel').hidden = true; $('login').hidden = false;
+      $('loginErr').textContent = errMsg(e);
+    }
+  }
+
+  if (KEY) start(); else { $('login').hidden = false; $('pw').focus(); }
+</script>
+</body>
+</html>

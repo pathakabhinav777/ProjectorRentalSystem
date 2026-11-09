@@ -27,6 +27,8 @@ const NIGHT_START = '18:00';     // calendar event start
 const NIGHT_END = '06:00';       // calendar event end (next morning)
 // ------------------------------------------
 
+// The live web-app URL (Deploy > Manage deployments). Used for links in emails.
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7ke5FHUyWd0GXTvmwfGdvFm92RFA9yigrpfS6WIz794WGgIPdRNOZ3qXB4I1YV8_Jlg/exec';
 const SHEET_NAME = 'Bookings';
 const HEADERS = ['ID', 'Created', 'Status', 'Date', 'Name', 'Phone', 'Block', 'Room',
                  'Pickup', 'UTR', 'Amount', 'CalendarEventId'];
@@ -273,7 +275,7 @@ function notifyOwner_(b) {
 
 function adminLink_() {
   const key = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY');
-  return ScriptApp.getService().getUrl() + '?action=admin&key=' + key;
+  return WEB_APP_URL + '?action=admin&key=' + key;
 }
 
 function withRow_(id, fn) {

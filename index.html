@@ -3,424 +3,248 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hostel Projector Booking</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Projector Booking</title>
+  <style>
+    :root {
+      --bg: #f6f7f9; --card: #fff; --text: #16181d; --muted: #646b78; --line: #dde1e7;
+      --accent: #2563eb; --accent-text: #fff; --ok: #15803d; --ok-bg: #ecfdf3;
+      --bad: #b91c1c; --bad-bg: #fef2f2; --warn: #a16207; --warn-bg: #fefce8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1115; --card: #171a21; --text: #e8eaee; --muted: #9aa1ad; --line: #2a2f3a;
+        --accent: #3b82f6; --ok: #4ade80; --ok-bg: #0f2a1a; --bad: #f87171; --bad-bg: #2a1214;
+        --warn: #facc15; --warn-bg: #2a2410;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 480px; margin: 0 auto; padding: 24px 16px 48px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+    .price { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 18px; }
+    .price b { font-size: 22px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 14px 0 4px; }
+    input, select { width: 100%; padding: 10px 12px; font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+    input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .note { font-size: 13px; padding: 8px 10px; border-radius: 8px; margin-top: 6px; }
+    .note.ok { color: var(--ok); background: var(--ok-bg); }
+    .note.bad { color: var(--bad); background: var(--bad-bg); }
+    .taken { margin: 0 0 4px; padding: 0; list-style: none; font-size: 13px; color: var(--muted); }
+    .taken li { display: inline-block; margin: 0 6px 6px 0; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; }
+    .taken li.pending { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
+    .pay { margin-top: 18px; padding: 16px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; }
+    .pay img { width: 220px; max-width: 100%; border-radius: 8px; background: #fff; padding: 8px; }
+    .pay p { margin: 6px 0; font-size: 14px; }
+    .btn { display: block; width: 100%; margin-top: 20px; padding: 13px; font: inherit; font-weight: 600; border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-text); cursor: pointer; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); margin-top: 10px; text-decoration: none; text-align: center; }
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    #done { display: none; text-align: center; }
+    #done h2 { margin-top: 0; }
+  </style>
 </head>
-<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4 font-sans text-slate-800">
+<body>
+<main>
+  <div class="card" id="formCard">
+    <h1>📽️ Rent the Projector</h1>
+    <p class="sub">Projector + HDMI cable for one night (6 PM – 6 AM).</p>
 
-  <div class="max-w-lg w-full bg-white rounded-2xl p-6 shadow-md border border-slate-200">
-    <div class="mb-5">
-      <h1 class="text-2xl font-bold text-slate-900">📽️ Rent Cinema Projector</h1>
-      <p class="text-xs text-slate-500 mt-1">Available 6:00 PM – 6:00 AM • ₹50 up to 3 hrs • +₹10/hr after</p>
-    </div>
+    <div class="price"><span>Per night</span><b>₹70</b></div>
 
-    <!-- Live Booked Slots Display Box -->
-    <div class="mb-5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-      <h2 class="text-xs font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1.5 mb-2">
-        <span>📅 Currently Booked Slots</span>
-      </h2>
-      <div id="bookedSlotsContainer" class="space-y-1.5 text-xs text-slate-600">
-        <p class="text-slate-400 italic">No bookings recorded yet. All slots open!</p>
-      </div>
-    </div>
+    <label>Nights already taken</label>
+    <ul class="taken" id="takenList"><li>Loading…</li></ul>
 
-    <form id="rentalForm" class="space-y-4">
-      
-      <!-- Personal Details -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <form id="form" novalidate>
+      <label for="date">Night of</label>
+      <input type="date" id="date" required>
+      <div id="dateNote" class="note" hidden></div>
+
+      <label for="name">Your name</label>
+      <input id="name" maxlength="50" autocomplete="name" required placeholder="Rahul Sharma">
+
+      <label for="phone">Phone / WhatsApp</label>
+      <input id="phone" type="tel" inputmode="numeric" maxlength="13" autocomplete="tel" required placeholder="9876543210">
+
+      <div class="row">
         <div>
-          <label class="text-xs font-semibold uppercase text-slate-600">Your Name</label>
-          <input type="text" id="name" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Rahul Sharma">
-        </div>
-        <div>
-          <label class="text-xs font-semibold uppercase text-slate-600">Phone / WhatsApp</label>
-          <input type="tel" id="phone" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="9876543210">
-        </div>
-      </div>
-
-      <!-- Room Details -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs font-semibold uppercase text-slate-600">Your Block</label>
-          <input type="text" id="userBlock" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Block 9">
+          <label for="block">Your block</label>
+          <input id="block" maxlength="20" required placeholder="Block 9">
         </div>
         <div>
-          <label class="text-xs font-semibold uppercase text-slate-600">Your Room No.</label>
-          <input type="text" id="userRoom" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. 302">
+          <label for="room">Room no.</label>
+          <input id="room" maxlength="20" required placeholder="302">
         </div>
       </div>
 
-      <!-- Pickup Location -->
-      <div>
-        <label class="text-xs font-semibold uppercase text-slate-600">Pickup & Return Location</label>
-        <select id="pickupLocation" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm mt-1 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-          <option value="Block 9 - Room 467">Block 9 — Room 467</option>
-          <option value="Block 9 - Room 149">Block 9 — Room 149</option>
-        </select>
+      <label for="pickup">Pickup &amp; return</label>
+      <select id="pickup">
+        <option>Block 9 - Room 467</option>
+        <option>Block 9 - Room 149</option>
+      </select>
+
+      <div class="pay">
+        <p><b>Pay ₹70 by UPI</b></p>
+        <img src="upi-qr.jpg" alt="UPI QR code for payment">
+        <p id="upiIdText"></p>
+        <a id="upiBtn" class="btn secondary" hidden>Open UPI app</a>
       </div>
 
-      <!-- Date Selection -->
-      <div>
-        <label class="text-xs font-semibold uppercase text-slate-600">Rental Date</label>
-        <input type="date" id="rentalDate" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
-      </div>
+      <label for="utr">UPI transaction ID (UTR, 12 digits)</label>
+      <input id="utr" inputmode="numeric" maxlength="14" required placeholder="e.g. 431234567890">
+      <p class="sub" style="margin:4px 0 0;font-size:12px">Find it in your UPI app under the payment details ("UTR" or "UPI Ref No.").</p>
 
-      <!-- Pickup and Return Times -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs font-semibold uppercase text-slate-600">Pickup Time (Max 2:30 AM)</label>
-          <select id="pickupTime" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm mt-1 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-          </select>
-        </div>
-        <div>
-          <label class="text-xs font-semibold uppercase text-slate-600">Return Time (Max 6:00 AM)</label>
-          <select id="returnTime" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm mt-1 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-          </select>
-        </div>
-      </div>
+      <!-- Bots fill this; people never see it. -->
+      <div class="hp" aria-hidden="true"><input id="website" tabindex="-1" autocomplete="off"></div>
 
-      <!-- Duration Summary Alert -->
-      <div id="durationDisplay" class="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 p-2.5 rounded-lg text-center">
-        Calculating slot...
-      </div>
-
-      <!-- Add-ons -->
-      <div>
-        <label class="text-xs font-semibold uppercase text-slate-600 block mb-2">Select Add-ons</label>
-        <div class="space-y-2">
-          <label class="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="speakerAddon" class="w-4 h-4 text-blue-600 rounded">
-              <div>
-                <p class="text-sm font-medium text-slate-800">External Speakers</p>
-                <p class="text-xs text-slate-500">₹25 up to 3 hrs (+₹10/hr extra)</p>
-              </div>
-            </div>
-            <span id="speakerPriceLabel" class="text-sm font-semibold text-slate-700">₹25</span>
-          </label>
-
-          <label class="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="netflixAddon" class="w-4 h-4 text-blue-600 rounded">
-              <div>
-                <p class="text-sm font-medium text-slate-800">Netflix Access (In-built)</p>
-                <p class="text-xs text-slate-500">Active profile login on projector</p>
-              </div>
-            </div>
-            <span class="text-sm font-semibold text-slate-700">+₹10</span>
-          </label>
-
-          <label class="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="hdmiAddon" class="w-4 h-4 text-blue-600 rounded">
-              <div>
-                <p class="text-sm font-medium text-slate-800">HDMI Cable</p>
-                <p class="text-xs text-slate-500">High speed laptop connection</p>
-              </div>
-            </div>
-            <span class="text-sm font-semibold text-slate-700">+₹10</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Price Breakdown -->
-      <div class="p-4 bg-slate-50 rounded-xl space-y-1.5 text-sm border border-slate-200">
-        <div class="flex justify-between text-slate-600">
-          <span>Projector Rent</span>
-          <span id="projPrice">₹50</span>
-        </div>
-        <div id="speakerRow" class="flex justify-between text-slate-600 hidden">
-          <span>Speakers Rent</span>
-          <span id="speakerSubtotal">₹25</span>
-        </div>
-        <div id="netflixRow" class="flex justify-between text-slate-600 hidden">
-          <span>Netflix Profile</span>
-          <span>₹10</span>
-        </div>
-        <div id="hdmiRow" class="flex justify-between text-slate-600 hidden">
-          <span>HDMI Cable</span>
-          <span>₹10</span>
-        </div>
-        <hr class="my-2 border-slate-200">
-        <div class="flex justify-between font-bold text-slate-900 text-base">
-          <span>Total Amount</span>
-          <span id="grandTotal">₹50</span>
-        </div>
-      </div>
-
-      <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition">
-        Confirm Booking
-      </button>
+      <div id="formNote" class="note bad" hidden></div>
+      <button class="btn" id="submit" type="submit">Request booking</button>
+      <p class="sub" style="margin:10px 0 0;font-size:12px;text-align:center">Your booking is confirmed once I've checked the payment. I'll message you on WhatsApp.</p>
     </form>
   </div>
 
-  <script>
-    const BASE_PROJECTOR_PRICE_3HRS = 50;
-    const PROJECTOR_HOURLY_RATE = 10;
-    const BASE_SPEAKER_PRICE_3HRS = 25;
-    const SPEAKER_HOURLY_RATE = 10;
-    const NETFLIX_PRICE = 10;
-    const HDMI_PRICE = 10;
+  <div class="card" id="done">
+    <h2>✅ Request received</h2>
+    <p id="doneText"></p>
+    <p class="sub">I'll check your payment and WhatsApp you to confirm. No need to book again.</p>
+  </div>
+</main>
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEH6ig6v1SYPtdt3KD4oGN-vnIx0ts68V8ZwgfIX2VN1CB_9UMXoNX-bjJAvnFALy6/exec";
+<script>
+  // ===== Settings =====
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7ke5FHUyWd0GXTvmwfGdvFm92RFA9yigrpfS6WIz794WGgIPdRNOZ3qXB4I1YV8_Jlg/exec";
+  const UPI_ID = "9886930505@upi"; // shows an "Open UPI app" button on phones
+  const PAYEE_NAME = "Projector Rental";
+  const PRICE = 70;
+  const MAX_DAYS_AHEAD = 60;
+  // ====================
 
-    let existingBookings = [];
+  const $ = id => document.getElementById(id);
+  let taken = new Map(); // date -> "booked" | "pending"
 
-    const rentalDateInput = document.getElementById('rentalDate');
-    const pickupTimeSelect = document.getElementById('pickupTime');
-    const returnTimeSelect = document.getElementById('returnTime');
-    const durationDisplay = document.getElementById('durationDisplay');
-    const bookedSlotsContainer = document.getElementById('bookedSlotsContainer');
-    const submitBtn = document.getElementById('submitBtn');
-    const speakerCheck = document.getElementById('speakerAddon');
-    const netflixCheck = document.getElementById('netflixAddon');
-    const hdmiCheck = document.getElementById('hdmiAddon');
+  function localDateStr(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function prettyDate(s) {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+  }
+  function showNote(el, text, kind) {
+    el.textContent = text;
+    el.className = "note " + kind;
+    el.hidden = !text;
+  }
 
-    const SLOTS = [
-      { label: "06:00 PM", offsetMins: 0, dayOffset: 0, h: 18, m: 0 },
-      { label: "06:30 PM", offsetMins: 30, dayOffset: 0, h: 18, m: 30 },
-      { label: "07:00 PM", offsetMins: 60, dayOffset: 0, h: 19, m: 0 },
-      { label: "07:30 PM", offsetMins: 90, dayOffset: 0, h: 19, m: 30 },
-      { label: "08:00 PM", offsetMins: 120, dayOffset: 0, h: 20, m: 0 },
-      { label: "08:30 PM", offsetMins: 150, dayOffset: 0, h: 20, m: 30 },
-      { label: "09:00 PM", offsetMins: 180, dayOffset: 0, h: 21, m: 0 },
-      { label: "09:30 PM", offsetMins: 210, dayOffset: 0, h: 21, m: 30 },
-      { label: "10:00 PM", offsetMins: 240, dayOffset: 0, h: 22, m: 0 },
-      { label: "10:30 PM", offsetMins: 270, dayOffset: 0, h: 22, m: 30 },
-      { label: "11:00 PM", offsetMins: 300, dayOffset: 0, h: 23, m: 0 },
-      { label: "11:30 PM", offsetMins: 330, dayOffset: 0, h: 23, m: 30 },
-      { label: "12:00 AM (Midnight)", offsetMins: 360, dayOffset: 1, h: 0, m: 0 },
-      { label: "12:30 AM", offsetMins: 390, dayOffset: 1, h: 0, m: 30 },
-      { label: "01:00 AM", offsetMins: 420, dayOffset: 1, h: 1, m: 0 },
-      { label: "01:30 AM", offsetMins: 450, dayOffset: 1, h: 1, m: 30 },
-      { label: "02:00 AM", offsetMins: 480, dayOffset: 1, h: 2, m: 0 },
-      { label: "02:30 AM", offsetMins: 510, dayOffset: 1, h: 2, m: 30 },
-      { label: "03:00 AM", offsetMins: 540, dayOffset: 1, h: 3, m: 0 },
-      { label: "03:30 AM", offsetMins: 570, dayOffset: 1, h: 3, m: 30 },
-      { label: "04:00 AM", offsetMins: 600, dayOffset: 1, h: 4, m: 0 },
-      { label: "04:30 AM", offsetMins: 630, dayOffset: 1, h: 4, m: 30 },
-      { label: "05:00 AM", offsetMins: 660, dayOffset: 1, h: 5, m: 0 },
-      { label: "05:30 AM", offsetMins: 690, dayOffset: 1, h: 5, m: 30 },
-      { label: "06:00 AM", offsetMins: 720, dayOffset: 1, h: 6, m: 0 }
-    ];
+  // Date limits
+  const today = new Date();
+  const maxDay = new Date(); maxDay.setDate(today.getDate() + MAX_DAYS_AHEAD);
+  $("date").min = localDateStr(today);
+  $("date").max = localDateStr(maxDay);
+  $("date").value = localDateStr(today);
 
-    const today = new Date();
-    rentalDateInput.min = today.toISOString().split('T')[0];
-    rentalDateInput.value = today.toISOString().split('T')[0];
+  // UPI button
+  if (UPI_ID) {
+    $("upiIdText").textContent = "UPI ID: " + UPI_ID;
+    const link = "upi://pay?pa=" + encodeURIComponent(UPI_ID) + "&pn=" + encodeURIComponent(PAYEE_NAME) +
+                 "&am=" + PRICE + "&cu=INR&tn=" + encodeURIComponent("Projector booking");
+    $("upiBtn").href = link;
+    $("upiBtn").hidden = false;
+  }
 
-    function getEpoch(slotIndex) {
-      if (!rentalDateInput.value) return 0;
-      const parts = rentalDateInput.value.split('-');
-      const slot = SLOTS[slotIndex];
-      const d = new Date(parts[0], parts[1] - 1, Number(parts[2]) + slot.dayOffset, slot.h, slot.m, 0, 0);
-      return d.getTime();
+  function renderTaken() {
+    const list = $("takenList");
+    list.replaceChildren();
+    if (taken.size === 0) {
+      const li = document.createElement("li");
+      li.textContent = "None — every night is free";
+      list.appendChild(li);
+      return;
     }
-
-    // Direct overlap check (Zero buffer)
-    function isTimeOverlapping(startMs, endMs) {
-      if (!existingBookings || existingBookings.length === 0) return false;
-      for (let b of existingBookings) {
-        if (startMs < b.end && endMs > b.start) {
-          return true;
-        }
-      }
-      return false;
+    for (const [date, status] of taken) {
+      const li = document.createElement("li");
+      li.textContent = prettyDate(date) + (status === "pending" ? " (pending)" : "");
+      if (status === "pending") li.className = "pending";
+      list.appendChild(li);
     }
+  }
 
-    // Render the anonymous booked slots list
-    function renderBookedSlotsList() {
-      if (!existingBookings || existingBookings.length === 0) {
-        bookedSlotsContainer.innerHTML = `<p class="text-slate-400 italic">No bookings recorded yet. All slots open!</p>`;
-        return;
-      }
-
-      bookedSlotsContainer.innerHTML = "";
-      existingBookings.forEach(b => {
-        const item = document.createElement("div");
-        item.className = "flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-red-100 text-red-700 font-medium";
-        item.innerHTML = `<span>🔴 Booked:</span> <span>${b.display}</span>`;
-        bookedSlotsContainer.appendChild(item);
-      });
+  function checkDate() {
+    const d = $("date").value;
+    const status = taken.get(d);
+    if (!d) { showNote($("dateNote"), "", "ok"); $("submit").disabled = true; return; }
+    if (status) {
+      showNote($("dateNote"), status === "pending"
+        ? "Someone has requested this night and is waiting for confirmation. Please pick another."
+        : "This night is already booked. Please pick another.", "bad");
+      $("submit").disabled = true;
+    } else {
+      showNote($("dateNote"), "✓ " + prettyDate(d) + " is available", "ok");
+      $("submit").disabled = false;
     }
+  }
 
-    // JSONP callback
-    window.handleBookingsResponse = function(data) {
-      if (Array.isArray(data)) {
-        existingBookings = data;
-        renderBookedSlotsList();
-        calculate();
-      }
-    };
-
-    function fetchBookings() {
-      const oldScript = document.getElementById('jsonp-script');
-      if (oldScript) oldScript.remove();
-
-      const script = document.createElement('script');
-      script.id = 'jsonp-script';
-      script.src = `${SCRIPT_URL}?callback=handleBookingsResponse&_t=${Date.now()}`;
-      document.body.appendChild(script);
+  async function loadTaken() {
+    try {
+      const res = await fetch(SCRIPT_URL + "?action=dates&_t=" + Date.now());
+      const data = await res.json();
+      taken = new Map((data.dates || []).map(x => [String(x.date), x.status === "booked" ? "booked" : "pending"]));
+      renderTaken();
+    } catch (e) {
+      $("takenList").replaceChildren(Object.assign(document.createElement("li"), { textContent: "Couldn't load — try refreshing" }));
     }
+    checkDate();
+  }
 
-    function populatePickupTimes() {
-      pickupTimeSelect.innerHTML = "";
-      SLOTS.filter(s => s.offsetMins <= 510).forEach((slot, idx) => {
-        const opt = document.createElement('option');
-        opt.value = idx;
-        opt.innerText = slot.label;
-        pickupTimeSelect.appendChild(opt);
-      });
-      populateReturnTimes();
-    }
+  $("date").addEventListener("change", checkDate);
 
-    function populateReturnTimes() {
-      const pickupIdx = parseInt(pickupTimeSelect.value) || 0;
-      returnTimeSelect.innerHTML = "";
+  $("form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const note = $("formNote");
+    const v = id => $(id).value.trim();
+    const phone = v("phone").replace(/[\s-]/g, "").replace(/^\+?91/, "");
+    const utr = v("utr").replace(/\s/g, "");
 
-      for (let i = pickupIdx + 1; i < SLOTS.length; i++) {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.innerText = SLOTS[i].label;
-        returnTimeSelect.appendChild(opt);
-      }
+    if (v("name").length < 2) return showNote(note, "Please enter your name.", "bad");
+    if (!/^[6-9]\d{9}$/.test(phone)) return showNote(note, "Please enter a valid 10-digit mobile number.", "bad");
+    if (!v("block") || !v("room")) return showNote(note, "Please enter your block and room.", "bad");
+    if (!/^\d{12}$/.test(utr)) return showNote(note, "The UTR must be 12 digits. Find it in your UPI app's payment details.", "bad");
+    showNote(note, "", "bad");
 
-      const defaultReturn = Math.min(pickupIdx + 6, SLOTS.length - 1);
-      returnTimeSelect.value = defaultReturn;
-      calculate();
-    }
+    const btn = $("submit");
+    btn.disabled = true;
+    btn.textContent = "Sending…";
 
-    function calculate() {
-      const pickupIdx = parseInt(pickupTimeSelect.value);
-      const returnIdx = parseInt(returnTimeSelect.value);
-
-      if (isNaN(pickupIdx) || isNaN(returnIdx)) return null;
-
-      const startMs = getEpoch(pickupIdx);
-      const endMs = getEpoch(returnIdx);
-
-      // Overlap check
-      if (isTimeOverlapping(startMs, endMs)) {
-        durationDisplay.innerText = "❌ Selected range overlaps an existing booking! Choose another time.";
-        durationDisplay.className = "text-xs font-bold text-red-700 bg-red-100 border border-red-200 p-2.5 rounded-lg text-center";
-        submitBtn.disabled = true;
-        submitBtn.className = "w-full bg-gray-400 text-white py-3 rounded-xl font-medium cursor-not-allowed";
-        return null;
-      }
-
-      submitBtn.disabled = false;
-      submitBtn.className = "w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition";
-
-      const totalMinutes = SLOTS[returnIdx].offsetMins - SLOTS[pickupIdx].offsetMins;
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-
-      let extraBilledHours = 0;
-      if (totalMinutes > 180) {
-        extraBilledHours = Math.ceil((totalMinutes - 180) / 60);
-      }
-
-      durationDisplay.innerText = `⏱️ Duration: ${hours}h ${minutes}m (Billed: 3h Base + ${extraBilledHours}h Extra • Slot Available ✅)`;
-      durationDisplay.className = "text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 p-2.5 rounded-lg text-center";
-
-      const projectorTotal = BASE_PROJECTOR_PRICE_3HRS + (extraBilledHours * PROJECTOR_HOURLY_RATE);
-      document.getElementById('projPrice').innerText = `₹${projectorTotal}`;
-
-      let speakerTotal = 0;
-      const speakerPreview = BASE_SPEAKER_PRICE_3HRS + (extraBilledHours * SPEAKER_HOURLY_RATE);
-      if (speakerCheck.checked) {
-        speakerTotal = speakerPreview;
-        document.getElementById('speakerRow').classList.remove('hidden');
-        document.getElementById('speakerSubtotal').innerText = `₹${speakerTotal}`;
-        document.getElementById('speakerPriceLabel').innerText = `+₹${speakerTotal}`;
-      } else {
-        document.getElementById('speakerRow').classList.add('hidden');
-        document.getElementById('speakerPriceLabel').innerText = `₹${speakerPreview}`;
-      }
-
-      const netflixTotal = netflixCheck.checked ? NETFLIX_PRICE : 0;
-      document.getElementById('netflixRow').classList.toggle('hidden', !netflixCheck.checked);
-
-      const hdmiTotal = hdmiCheck.checked ? HDMI_PRICE : 0;
-      document.getElementById('hdmiRow').classList.toggle('hidden', !hdmiCheck.checked);
-
-      const grandTotal = projectorTotal + speakerTotal + netflixTotal + hdmiTotal;
-      document.getElementById('grandTotal').innerText = `₹${grandTotal}`;
-
-      const pickupSlot = SLOTS[pickupIdx];
-      const returnSlot = SLOTS[returnIdx];
-      const pDate = new Date(startMs);
-      const rDate = new Date(endMs);
-
-      return {
-        startMs,
-        endMs,
-        pickupFullStr: `${pDate.toLocaleDateString('en-GB')} ${pickupSlot.label}`,
-        returnFullStr: `${rDate.toLocaleDateString('en-GB')} ${returnSlot.label}`,
-        formattedDuration: `${hours}h ${minutes}m`,
-        grandTotal,
-        speakerTotal
-      };
-    }
-
-    // Initialize UI instantly
-    populatePickupTimes();
-    fetchBookings();
-
-    rentalDateInput.addEventListener('change', calculate);
-    pickupTimeSelect.addEventListener('change', populateReturnTimes);
-    returnTimeSelect.addEventListener('change', calculate);
-    speakerCheck.addEventListener('change', calculate);
-    netflixCheck.addEventListener('change', calculate);
-    hdmiCheck.addEventListener('change', calculate);
-
-    document.getElementById('rentalForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const calc = calculate();
-      if (!calc) return;
-
-      submitBtn.innerText = "Submitting Booking...";
-      submitBtn.disabled = true;
-
-      const addons = [];
-      if (speakerCheck.checked) addons.push(`Speakers (₹${calc.speakerTotal})`);
-      if (netflixCheck.checked) addons.push("Netflix (₹10)");
-      if (hdmiCheck.checked) addons.push("HDMI (₹10)");
-
-      const formData = new URLSearchParams();
-      formData.append("name", document.getElementById('name').value);
-      formData.append("phone", document.getElementById('phone').value);
-      formData.append("userBlock", document.getElementById('userBlock').value);
-      formData.append("userRoom", document.getElementById('userRoom').value);
-      formData.append("pickupLocation", document.getElementById('pickupLocation').value);
-      formData.append("pickupDateTime", calc.pickupFullStr);
-      formData.append("returnDateTime", calc.returnFullStr);
-      formData.append("startTimestamp", calc.startMs);
-      formData.append("endTimestamp", calc.endMs);
-      formData.append("duration", calc.formattedDuration);
-      formData.append("addons", addons.length ? addons.join(", ") : "None");
-      formData.append("totalPrice", calc.grandTotal);
-
-      try {
-        const response = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString()
-        });
-
-        const resText = await response.text();
-
-        if (resText.includes("COLLISION")) {
-          alert("⚠️ Booking Collision: Someone just booked this time slot! Refreshing...");
-          fetchBookings();
-        } else {
-          alert(`🎬 Booking Confirmed for ${document.getElementById('name').value}!\n\nPickup: ${calc.pickupFullStr}\nReturn: ${calc.returnFullStr}\nTotal: ₹${calc.grandTotal}`);
-          location.reload();
-        }
-      } catch (err) {
-        alert("Booking submitted! Check your Google Sheet.");
-        location.reload();
-      }
+    const body = new URLSearchParams({
+      date: v("date"), name: v("name"), phone, block: v("block"), room: v("room"),
+      pickup: $("pickup").value, utr, website: $("website").value,
     });
-  </script>
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        $("formCard").style.display = "none";
+        $("doneText").textContent = "Night of " + prettyDate(v("date")) + ", pickup from " + $("pickup").value + ".";
+        $("done").style.display = "block";
+      } else {
+        showNote(note, data.error || "Something went wrong. Please try again.", "bad");
+        loadTaken();
+      }
+    } catch (err) {
+      showNote(note, "Couldn't reach the server. Check your connection and try again.", "bad");
+    } finally {
+      btn.textContent = "Request booking";
+      if ($("formCard").style.display !== "none") checkDate();
+    }
+  });
+
+  loadTaken();
+</script>
 </body>
 </html>

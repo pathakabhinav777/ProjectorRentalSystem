@@ -203,7 +203,7 @@
     e.preventDefault();
     const note = $("formNote");
     const v = id => $(id).value.trim();
-    const phone = v("phone").replace(/[\s-]/g, "").replace(/^\+?91/, "");
+    const phone = v("phone").replace(/[\s-]/g, "").replace(/^(\+?91)(\d{10})$/, "$2");
     const utr = v("utr").replace(/\s/g, "");
 
     if (v("name").length < 2) return showNote(note, "Please enter your name.", "bad");

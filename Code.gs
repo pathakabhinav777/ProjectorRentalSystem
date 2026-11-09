@@ -144,7 +144,7 @@ function validate_(p) {
   const s = k => String(p[k] || '').trim();
   const b = {
     name: s('name').replace(/\s+/g, ' '),
-    phone: s('phone').replace(/[\s-]/g, '').replace(/^\+?91/, ''),
+    phone: s('phone').replace(/[\s-]/g, '').replace(/^(\+?91)(\d{10})$/, '$2'),
     block: s('block').replace(/\s+/g, ' '),
     room: s('room').replace(/\s+/g, ' '),
     pickup: s('pickup'),

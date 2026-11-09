@@ -3,222 +3,449 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projector Booking</title>
+  <meta name="theme-color" content="#07070b">
+  <title>Projector Night</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f6f7f9; --card: #fff; --text: #16181d; --muted: #646b78; --line: #dde1e7;
-      --accent: #2563eb; --accent-text: #fff; --ok: #15803d; --ok-bg: #ecfdf3;
-      --bad: #b91c1c; --bad-bg: #fef2f2; --warn: #a16207; --warn-bg: #fefce8;
+      --bg: #07070b;
+      --panel: rgba(22, 22, 32, .72);
+      --panel-solid: #14141d;
+      --line: rgba(255, 255, 255, .08);
+      --line-strong: rgba(255, 255, 255, .16);
+      --text: #f3f2f8;
+      --muted: #9b99ab;
+      --dim: #5d5b6c;
+      --amber: #ffb547;
+      --pink: #ff5f8f;
+      --violet: #8b6cff;
+      --grad: linear-gradient(135deg, #ffb547 0%, #ff5f8f 50%, #8b6cff 100%);
+      --ok: #3ddc97;
+      --bad: #ff6b6b;
+      --radius: 20px;
+      color-scheme: dark;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0f1115; --card: #171a21; --text: #e8eaee; --muted: #9aa1ad; --line: #2a2f3a;
-        --accent: #3b82f6; --ok: #4ade80; --ok-bg: #0f2a1a; --bad: #f87171; --bad-bg: #2a1214;
-        --warn: #facc15; --warn-bg: #2a2410;
-      }
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-    main { max-width: 480px; margin: 0 auto; padding: 24px 16px 48px; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
-    h1 { font-size: 22px; margin: 0 0 4px; }
-    .sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
-    .price { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 18px; }
-    .price b { font-size: 22px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 14px 0 4px; }
-    input, select { width: 100%; padding: 10px 12px; font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
-    input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .note { font-size: 13px; padding: 8px 10px; border-radius: 8px; margin-top: 6px; }
-    .note.ok { color: var(--ok); background: var(--ok-bg); }
-    .note.bad { color: var(--bad); background: var(--bad-bg); }
-    .taken { margin: 0 0 4px; padding: 0; list-style: none; font-size: 13px; color: var(--muted); }
-    .taken li { display: inline-block; margin: 0 6px 6px 0; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; }
-    .taken li.pending { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
-    .pay { margin-top: 18px; padding: 16px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; }
-    .pay img { width: 220px; max-width: 100%; border-radius: 8px; background: #fff; padding: 8px; }
-    .pay p { margin: 6px 0; font-size: 14px; }
-    .btn { display: block; width: 100%; margin-top: 20px; padding: 13px; font: inherit; font-weight: 600; border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-text); cursor: pointer; }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
-    .btn.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); margin-top: 10px; text-decoration: none; text-align: center; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); }
+    body { font: 15px/1.55 "Plus Jakarta Sans", system-ui, sans-serif; min-height: 100vh; overflow-x: hidden; }
+    button, input { font: inherit; color: inherit; }
+
+    /* ---------- Ambient background ---------- */
+    .bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .35; animation: drift 18s ease-in-out infinite alternate; }
+    .blob.a { width: 420px; height: 420px; background: #ff5f8f; top: -140px; left: -120px; }
+    .blob.b { width: 380px; height: 380px; background: #8b6cff; top: 30%; right: -160px; animation-delay: -6s; }
+    .blob.c { width: 360px; height: 360px; background: #ffb547; bottom: -160px; left: 10%; opacity: .22; animation-delay: -12s; }
+    @keyframes drift { to { transform: translate(60px, 80px) scale(1.15); } }
+    .grain { position: absolute; inset: 0; opacity: .05; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+    main { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding: 28px 16px 64px; }
+
+    /* ---------- Hero ---------- */
+    .hero { text-align: center; padding: 8px 0 26px; }
+    .projector { width: 132px; height: 92px; margin: 0 auto 6px; display: block; overflow: visible; }
+    .beam { transform-origin: 30px 46px; animation: flicker 3.2s ease-in-out infinite; }
+    @keyframes flicker { 0%,100% { opacity: .55; } 45% { opacity: .9; } 50% { opacity: .65; } 55% { opacity: .95; } }
+    .reel { transform-box: fill-box; transform-origin: center; animation: spin 4s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-size: clamp(30px, 8vw, 40px); line-height: 1.1; margin: 4px 0 10px; font-weight: 800; letter-spacing: -.02em; }
+    h1 .g { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; background-size: 200% 200%; animation: shimmer 6s ease infinite; }
+    @keyframes shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    .tagline { color: var(--muted); margin: 0 0 18px; }
+    .chips { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .chip { padding: 7px 14px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 13px; font-weight: 600; backdrop-filter: blur(10px); }
+    .chip.price { background: var(--grad); border: 0; color: #160b14; }
+
+    /* ---------- Cards / steps ---------- */
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-top: 14px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    .reveal { opacity: 0; transform: translateY(18px); animation: rise .7s cubic-bezier(.2,.8,.2,1) forwards; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+    .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .num { width: 30px; height: 30px; flex: none; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 14px; background: rgba(255,255,255,.06); border: 1px solid var(--line-strong); transition: all .4s; }
+    .step.done .num { background: var(--grad); color: #160b14; border-color: transparent; }
+    .step-head h2 { font-size: 17px; margin: 0; font-weight: 700; }
+    .step-head p { margin: 0; font-size: 13px; color: var(--muted); }
+
+    /* ---------- Calendar ---------- */
+    .cal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .cal-top strong { font-size: 15px; }
+    .nav { width: 36px; height: 36px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.03); cursor: pointer; display: grid; place-items: center; transition: background .2s, transform .15s; }
+    .nav:hover:not(:disabled) { background: rgba(255,255,255,.08); }
+    .nav:active:not(:disabled) { transform: scale(.92); }
+    .nav:disabled { opacity: .25; cursor: default; }
+    .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--dim); text-transform: uppercase; padding: 4px 0; }
+    .day { position: relative; aspect-ratio: 1; border-radius: 12px; border: 1px solid transparent; background: rgba(255,255,255,.035); cursor: pointer; display: grid; place-items: center; font-weight: 600; font-size: 14px; transition: background .2s, transform .15s, border-color .2s; }
+    .day:hover:not(:disabled) { background: rgba(255,255,255,.09); border-color: var(--line-strong); }
+    .day:active:not(:disabled) { transform: scale(.9); }
+    .day:disabled { cursor: not-allowed; }
+    .day.empty { visibility: hidden; }
+    .day.past { color: var(--dim); background: transparent; }
+    .day.booked { color: var(--dim); background: rgba(255,107,107,.07); text-decoration: line-through; text-decoration-color: var(--bad); }
+    .day.pending { color: var(--dim); background: rgba(255,181,71,.07); }
+    .day.pending::after { content: ""; position: absolute; bottom: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
+    .day.today { border-color: var(--line-strong); }
+    .day.sel { background: var(--grad); color: #160b14; border-color: transparent; animation: pop .35s cubic-bezier(.3,1.6,.5,1); box-shadow: 0 6px 24px -6px rgba(255,95,143,.7); }
+    @keyframes pop { 0% { transform: scale(.7); } 100% { transform: scale(1); } }
+    .grid.slide-l { animation: slideL .3s ease; }
+    .grid.slide-r { animation: slideR .3s ease; }
+    @keyframes slideL { from { opacity: 0; transform: translateX(24px); } }
+    @keyframes slideR { from { opacity: 0; transform: translateX(-24px); } }
+    .legend { display: flex; gap: 14px; margin-top: 12px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+    .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+    .picked { margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: rgba(61,220,151,.08); border: 1px solid rgba(61,220,151,.25); color: var(--ok); font-weight: 600; font-size: 14px; display: none; }
+    .picked.show { display: block; animation: rise .4s ease forwards; opacity: 0; transform: translateY(6px); }
+
+    /* ---------- Pickup cards ---------- */
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .opt { text-align: left; padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: rgba(255,255,255,.03); cursor: pointer; transition: all .25s; position: relative; }
+    .opt:hover { border-color: var(--line-strong); }
+    .opt:active { transform: scale(.97); }
+    .opt .big { font-size: 22px; font-weight: 800; display: block; }
+    .opt .small { font-size: 12px; color: var(--muted); }
+    .opt .tick { position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line-strong); transition: all .25s; display: grid; place-items: center; }
+    .opt.on { border-color: transparent; background: linear-gradient(var(--panel-solid), var(--panel-solid)) padding-box, var(--grad) border-box; border: 1.5px solid transparent; }
+    .opt.on .tick { background: var(--grad); border-color: transparent; }
+    .opt.on .tick::after { content: ""; width: 6px; height: 10px; border: solid #160b14; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+
+    /* ---------- Fields ---------- */
+    .field { position: relative; margin-top: 12px; }
+    .field:first-child { margin-top: 0; }
+    .field input { width: 100%; padding: 22px 14px 8px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.035); outline: none; transition: border-color .2s, background .2s, box-shadow .2s; }
+    .field label { position: absolute; left: 15px; top: 15px; color: var(--muted); pointer-events: none; transition: all .2s ease; font-size: 15px; }
+    .field input:focus, .field input:not(:placeholder-shown) { background: rgba(255,255,255,.055); }
+    .field input:focus { border-color: var(--pink); box-shadow: 0 0 0 4px rgba(255,95,143,.15); }
+    .field input:focus + label, .field input:not(:placeholder-shown) + label { top: 7px; font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--amber); }
+    .field.err input { border-color: var(--bad); animation: shake .4s; }
+    @keyframes shake { 20%,60% { transform: translateX(-5px); } 40%,80% { transform: translateX(5px); } }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .two .field { margin-top: 12px; }
+    .hint { font-size: 12px; color: var(--muted); margin: 8px 2px 0; }
+
+    /* ---------- Payment ---------- */
+    .pay { display: grid; gap: 14px; justify-items: center; text-align: center; }
+    .qr-wrap { position: relative; padding: 3px; border-radius: 22px; background: var(--grad); background-size: 200% 200%; animation: shimmer 5s ease infinite; }
+    .qr { display: block; width: 220px; height: 220px; border-radius: 19px; background: #000; padding: 12px; }
+    .amount { font-size: 32px; font-weight: 800; letter-spacing: -.02em; }
+    .upi-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 8px 8px 16px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid var(--line); }
+    .upi-row .lbl { font-size: 11px; color: var(--muted); text-align: left; }
+    .upi-row .id { font-weight: 700; font-size: 16px; letter-spacing: .01em; text-align: left; word-break: break-all; }
+    .upi-row .grow { flex: 1; min-width: 0; }
+    .copy { flex: none; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--line-strong); background: rgba(255,255,255,.06); cursor: pointer; font-weight: 600; font-size: 13px; transition: all .2s; min-width: 78px; }
+    .copy:active { transform: scale(.94); }
+    .copy.ok { background: var(--ok); color: #06210f; border-color: transparent; }
+    .ghost { width: 100%; padding: 13px; border-radius: 14px; border: 1px solid var(--line-strong); background: transparent; font-weight: 700; cursor: pointer; text-decoration: none; display: none; transition: background .2s; }
+    .ghost:hover { background: rgba(255,255,255,.05); }
+    .ghost.show { display: block; }
+
+    /* ---------- Submit ---------- */
+    .err-box { display: none; margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: rgba(255,107,107,.1); border: 1px solid rgba(255,107,107,.3); color: #ffb3b3; font-size: 14px; font-weight: 500; }
+    .err-box.show { display: block; animation: shake .4s; }
+    .cta { position: relative; overflow: hidden; width: 100%; margin-top: 18px; padding: 17px; border: 0; border-radius: 16px; background: var(--grad); background-size: 200% 200%; color: #160b14; font-weight: 800; font-size: 16px; cursor: pointer; transition: transform .15s, opacity .2s, box-shadow .3s; box-shadow: 0 10px 40px -10px rgba(255,95,143,.7); animation: shimmer 6s ease infinite; }
+    .cta::after { content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent); animation: sweep 3.2s ease-in-out infinite; }
+    @keyframes sweep { 0% { left: -60%; } 60%,100% { left: 130%; } }
+    .cta:active:not(:disabled) { transform: scale(.98); }
+    .cta:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+    .cta:disabled::after { display: none; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2.5px solid rgba(22,11,20,.3); border-top-color: #160b14; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -3px; margin-right: 8px; }
+    .fine { text-align: center; font-size: 12px; color: var(--muted); margin: 12px 0 0; }
+
+    /* ---------- Success ---------- */
+    #done { display: none; text-align: center; padding: 34px 22px; }
+    #done.show { display: block; animation: rise .6s cubic-bezier(.2,.8,.2,1) forwards; opacity: 0; transform: translateY(18px); }
+    .check { width: 86px; height: 86px; margin: 0 auto 14px; display: block; }
+    .check circle { stroke: url(#cg); stroke-width: 4; fill: none; stroke-dasharray: 260; stroke-dashoffset: 260; animation: draw .8s ease forwards; }
+    .check path { stroke: #f3f2f8; stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 60; stroke-dashoffset: 60; animation: draw .45s .65s ease forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    #done h2 { font-size: 26px; margin: 0 0 6px; }
+    #done p { color: var(--muted); margin: 6px 0; }
+    #done .when { color: var(--text); font-weight: 700; font-size: 17px; }
+    .confetti { position: fixed; top: -12px; width: 8px; height: 14px; border-radius: 2px; z-index: 5; pointer-events: none; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+
+    footer { text-align: center; color: var(--dim); font-size: 12px; margin-top: 26px; }
     .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-    #done { display: none; text-align: center; }
-    #done h2 { margin-top: 0; }
+
+    @media (max-width: 380px) { .card { padding: 16px; } .qr { width: 200px; height: 200px; } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .reveal { opacity: 1; transform: none; }
+    }
   </style>
 </head>
 <body>
+<div class="bg"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div><div class="grain"></div></div>
+
 <main>
-  <div class="card" id="formCard">
-    <h1>📽️ Rent the Projector</h1>
-    <p class="sub">Projector + HDMI cable for one night (6 PM – 6 AM).</p>
+  <header class="hero reveal">
+    <svg class="projector" viewBox="0 0 132 92" aria-hidden="true">
+      <defs>
+        <linearGradient id="beamG" x1="0" x2="1">
+          <stop offset="0" stop-color="#ffb547" stop-opacity=".9"/>
+          <stop offset="1" stop-color="#8b6cff" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="bodyG" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="#2a2838"/><stop offset="1" stop-color="#17161f"/>
+        </linearGradient>
+      </defs>
+      <polygon class="beam" points="30,46 132,8 132,84" fill="url(#beamG)"/>
+      <circle class="reel" cx="24" cy="16" r="12" fill="none" stroke="#ff5f8f" stroke-width="3" stroke-dasharray="6 4"/>
+      <circle class="reel" cx="52" cy="16" r="12" fill="none" stroke="#8b6cff" stroke-width="3" stroke-dasharray="6 4"/>
+      <rect x="4" y="30" width="64" height="34" rx="9" fill="url(#bodyG)" stroke="rgba(255,255,255,.18)"/>
+      <circle cx="30" cy="47" r="9" fill="#0b0b10" stroke="#ffb547" stroke-width="2.5"/>
+      <circle cx="30" cy="47" r="3.5" fill="#ffb547"/>
+      <rect x="44" y="40" width="16" height="3" rx="1.5" fill="rgba(255,255,255,.25)"/>
+      <rect x="44" y="47" width="11" height="3" rx="1.5" fill="rgba(255,255,255,.15)"/>
+      <rect x="14" y="64" width="6" height="10" rx="2" fill="#2a2838"/><rect x="52" y="64" width="6" height="10" rx="2" fill="#2a2838"/>
+    </svg>
+    <h1>Movie night,<br><span class="g">on the big wall.</span></h1>
+    <p class="tagline">Rent the projector for the night. Pick a date, pay, done.</p>
+    <div class="chips">
+      <span class="chip price">₹70 / night</span>
+      <span class="chip">📽️ Projector + HDMI</span>
+      <span class="chip">🌙 6 PM – 6 AM</span>
+    </div>
+  </header>
 
-    <div class="price"><span>Per night</span><b>₹70</b></div>
-
-    <label>Nights already taken</label>
-    <ul class="taken" id="takenList"><li>Loading…</li></ul>
-
-    <form id="form" novalidate>
-      <label for="date">Night of</label>
-      <input type="date" id="date" required>
-      <div id="dateNote" class="note" hidden></div>
-
-      <label for="name">Your name</label>
-      <input id="name" maxlength="50" autocomplete="name" required placeholder="Rahul Sharma">
-
-      <label for="phone">Phone / WhatsApp</label>
-      <input id="phone" type="tel" inputmode="numeric" maxlength="13" autocomplete="tel" required placeholder="9876543210">
-
-      <div class="row">
-        <div>
-          <label for="block">Your block</label>
-          <input id="block" maxlength="20" required placeholder="Block 9">
-        </div>
-        <div>
-          <label for="room">Room no.</label>
-          <input id="room" maxlength="20" required placeholder="302">
-        </div>
+  <form id="form" novalidate>
+    <!-- Step 1: date -->
+    <section class="card step reveal" id="s1" style="animation-delay:.1s">
+      <div class="step-head">
+        <div class="num">1</div>
+        <div><h2>Pick your night</h2><p>Grey nights are taken.</p></div>
       </div>
+      <div class="cal-top">
+        <button type="button" class="nav" id="prev" aria-label="Previous month">‹</button>
+        <strong id="monthLabel"></strong>
+        <button type="button" class="nav" id="next" aria-label="Next month">›</button>
+      </div>
+      <div class="grid" id="dows"></div>
+      <div class="grid" id="days" style="margin-top:5px"></div>
+      <div class="legend">
+        <span><i style="background:var(--ok)"></i>Free</span>
+        <span><i style="background:var(--amber)"></i>Waiting for confirmation</span>
+        <span><i style="background:var(--bad)"></i>Booked</span>
+      </div>
+      <div class="picked" id="picked"></div>
+    </section>
 
-      <label for="pickup">Pickup &amp; return</label>
-      <select id="pickup">
-        <option>Block 9 - Room 467</option>
-        <option>Block 9 - Room 149</option>
-      </select>
+    <!-- Step 2: pickup -->
+    <section class="card step reveal" id="s2" style="animation-delay:.18s">
+      <div class="step-head">
+        <div class="num">2</div>
+        <div><h2>Pickup &amp; return</h2><p>Collect it from here, return it here.</p></div>
+      </div>
+      <div class="options" id="pickupOpts">
+        <button type="button" class="opt on" data-value="Block 9 - Room 467"><span class="tick"></span><span class="small">Block 9</span><span class="big">467</span><span class="small">Room</span></button>
+        <button type="button" class="opt" data-value="Block 9 - Room 149"><span class="tick"></span><span class="small">Block 9</span><span class="big">149</span><span class="small">Room</span></button>
+      </div>
+    </section>
 
+    <!-- Step 3: details -->
+    <section class="card step reveal" id="s3" style="animation-delay:.26s">
+      <div class="step-head">
+        <div class="num">3</div>
+        <div><h2>Your details</h2><p>So I know who's coming.</p></div>
+      </div>
+      <div class="field"><input id="name" maxlength="50" autocomplete="name" placeholder=" "><label for="name">Your name</label></div>
+      <div class="field"><input id="phone" type="tel" inputmode="numeric" maxlength="14" autocomplete="tel" placeholder=" "><label for="phone">WhatsApp number</label></div>
+      <div class="two">
+        <div class="field"><input id="block" maxlength="20" placeholder=" "><label for="block">Your block</label></div>
+        <div class="field"><input id="room" maxlength="20" placeholder=" "><label for="room">Room no.</label></div>
+      </div>
+    </section>
+
+    <!-- Step 4: pay -->
+    <section class="card step reveal" id="s4" style="animation-delay:.34s">
+      <div class="step-head">
+        <div class="num">4</div>
+        <div><h2>Pay &amp; confirm</h2><p>Scan with any UPI app.</p></div>
+      </div>
       <div class="pay">
-        <p><b>Pay ₹70 by UPI</b></p>
-        <img src="upi-qr.jpg" alt="UPI QR code for payment">
-        <p id="upiIdText"></p>
-        <a id="upiBtn" class="btn secondary" hidden>Open UPI app</a>
+        <div class="amount">₹70</div>
+        <div class="qr-wrap"><img class="qr" src="upi-qr.jpg?v=3" alt="UPI QR code to pay ₹70" width="220" height="220"></div>
+        <div class="upi-row">
+          <div class="grow"><div class="lbl">UPI ID</div><div class="id" id="upiId"></div></div>
+          <button type="button" class="copy" id="copyBtn">Copy</button>
+        </div>
+        <a class="ghost" id="upiBtn">Open UPI app to pay ₹70</a>
       </div>
+      <div class="field" style="margin-top:16px"><input id="utr" inputmode="numeric" maxlength="14" placeholder=" "><label for="utr">UPI transaction ID (12-digit UTR)</label></div>
+      <p class="hint">After paying, open the payment in your UPI app and copy the "UTR" or "UPI Ref No."</p>
 
-      <label for="utr">UPI transaction ID (UTR, 12 digits)</label>
-      <input id="utr" inputmode="numeric" maxlength="14" required placeholder="e.g. 431234567890">
-      <p class="sub" style="margin:4px 0 0;font-size:12px">Find it in your UPI app under the payment details ("UTR" or "UPI Ref No.").</p>
-
-      <!-- Bots fill this; people never see it. -->
       <div class="hp" aria-hidden="true"><input id="website" tabindex="-1" autocomplete="off"></div>
 
-      <div id="formNote" class="note bad" hidden></div>
-      <button class="btn" id="submit" type="submit">Request booking</button>
-      <p class="sub" style="margin:10px 0 0;font-size:12px;text-align:center">Your booking is confirmed once I've checked the payment. I'll message you on WhatsApp.</p>
-    </form>
-  </div>
+      <div class="err-box" id="err"></div>
+      <button class="cta" id="submit" type="submit" disabled>Pick a night first</button>
+      <p class="fine">I'll check the payment and confirm on WhatsApp.</p>
+    </section>
+  </form>
 
-  <div class="card" id="done">
-    <h2>✅ Request received</h2>
-    <p id="doneText"></p>
-    <p class="sub">I'll check your payment and WhatsApp you to confirm. No need to book again.</p>
-  </div>
+  <section class="card" id="done">
+    <svg class="check" viewBox="0 0 86 86" aria-hidden="true">
+      <defs><linearGradient id="cg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffb547"/><stop offset=".5" stop-color="#ff5f8f"/><stop offset="1" stop-color="#8b6cff"/></linearGradient></defs>
+      <circle cx="43" cy="43" r="40"/><path d="M27 44 l11 11 l22 -24"/>
+    </svg>
+    <h2>Request sent! 🍿</h2>
+    <p class="when" id="doneWhen"></p>
+    <p>I'll check your payment and WhatsApp you to confirm.<br>No need to book again.</p>
+  </section>
+
+  <footer>Hostel projector rental</footer>
 </main>
 
 <script>
   // ===== Settings =====
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7ke5FHUyWd0GXTvmwfGdvFm92RFA9yigrpfS6WIz794WGgIPdRNOZ3qXB4I1YV8_Jlg/exec";
-  const UPI_ID = "9886930505@upi"; // shows an "Open UPI app" button on phones
+  const UPI_ID = "9886930505@upi";
   const PAYEE_NAME = "Projector Rental";
   const PRICE = 70;
   const MAX_DAYS_AHEAD = 60;
   // ====================
 
   const $ = id => document.getElementById(id);
-  let taken = new Map(); // date -> "booked" | "pending"
+  const pad = n => String(n).padStart(2, "0");
+  const ds = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const fromDs = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const pretty = s => fromDs(s).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
 
-  function localDateStr(d) {
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  }
-  function prettyDate(s) {
-    const [y, m, d] = s.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
-  }
-  function showNote(el, text, kind) {
-    el.textContent = text;
-    el.className = "note " + kind;
-    el.hidden = !text;
-  }
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const maxDay = new Date(today); maxDay.setDate(maxDay.getDate() + MAX_DAYS_AHEAD);
+  const TODAY = ds(today), MAX = ds(maxDay);
 
-  // Date limits
-  const today = new Date();
-  const maxDay = new Date(); maxDay.setDate(today.getDate() + MAX_DAYS_AHEAD);
-  $("date").min = localDateStr(today);
-  $("date").max = localDateStr(maxDay);
-  $("date").value = localDateStr(today);
+  let taken = new Map();   // "YYYY-MM-DD" -> "booked" | "pending"
+  let selected = null;
+  let pickup = "Block 9 - Room 467";
+  let view = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  // UPI button
-  if (UPI_ID) {
-    $("upiIdText").textContent = "UPI ID: " + UPI_ID;
-    const link = "upi://pay?pa=" + encodeURIComponent(UPI_ID) + "&pn=" + encodeURIComponent(PAYEE_NAME) +
-                 "&am=" + PRICE + "&cu=INR&tn=" + encodeURIComponent("Projector booking");
-    $("upiBtn").href = link;
-    $("upiBtn").hidden = false;
-  }
+  // ---------- Calendar ----------
+  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(d => {
+    const el = document.createElement("div"); el.className = "dow"; el.textContent = d; $("dows").appendChild(el);
+  });
 
-  function renderTaken() {
-    const list = $("takenList");
-    list.replaceChildren();
-    if (taken.size === 0) {
-      const li = document.createElement("li");
-      li.textContent = "None — every night is free";
-      list.appendChild(li);
-      return;
+  function renderCal(dir) {
+    const grid = $("days");
+    grid.replaceChildren();
+    $("monthLabel").textContent = view.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+    const first = (view.getDay() + 6) % 7; // Monday = 0
+    const daysIn = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+    for (let i = 0; i < first; i++) {
+      const e = document.createElement("button"); e.className = "day empty"; e.disabled = true; e.type = "button"; grid.appendChild(e);
     }
-    for (const [date, status] of taken) {
-      const li = document.createElement("li");
-      li.textContent = prettyDate(date) + (status === "pending" ? " (pending)" : "");
-      if (status === "pending") li.className = "pending";
-      list.appendChild(li);
+    for (let d = 1; d <= daysIn; d++) {
+      const key = ds(new Date(view.getFullYear(), view.getMonth(), d));
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "day";
+      b.textContent = d;
+      const st = taken.get(key);
+      if (key < TODAY || key > MAX) { b.classList.add("past"); b.disabled = true; }
+      else if (st === "booked") { b.classList.add("booked"); b.disabled = true; b.title = "Booked"; }
+      else if (st === "pending") { b.classList.add("pending"); b.disabled = true; b.title = "Waiting for confirmation"; }
+      if (key === TODAY) b.classList.add("today");
+      if (key === selected) b.classList.add("sel");
+      b.addEventListener("click", () => pick(key));
+      grid.appendChild(b);
+    }
+    grid.classList.remove("slide-l", "slide-r");
+    if (dir) { void grid.offsetWidth; grid.classList.add(dir > 0 ? "slide-l" : "slide-r"); }
+    const firstMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastMonth = new Date(maxDay.getFullYear(), maxDay.getMonth(), 1);
+    $("prev").disabled = view <= firstMonth;
+    $("next").disabled = view >= lastMonth;
+  }
+
+  function pick(key) {
+    selected = key;
+    renderCal();
+    const p = $("picked");
+    p.classList.remove("show"); void p.offsetWidth;
+    p.textContent = "✓ " + pretty(key) + " · 6 PM to 6 AM";
+    p.classList.add("show");
+    $("s1").classList.add("done");
+    updateCta();
+  }
+
+  $("prev").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCal(-1); });
+  $("next").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderCal(1); });
+
+  // ---------- Pickup ----------
+  document.querySelectorAll(".opt").forEach(o => o.addEventListener("click", () => {
+    document.querySelectorAll(".opt").forEach(x => x.classList.toggle("on", x === o));
+    pickup = o.dataset.value;
+    $("s2").classList.add("done");
+  }));
+
+  // ---------- Details progress ----------
+  ["name", "phone", "block", "room"].forEach(id => $(id).addEventListener("input", () => {
+    $(id).parentElement.classList.remove("err");
+    const ok = ["name", "phone", "block", "room"].every(k => $(k).value.trim());
+    $("s3").classList.toggle("done", ok);
+  }));
+  $("utr").addEventListener("input", () => {
+    $("utr").parentElement.classList.remove("err");
+    $("s4").classList.toggle("done", /^\d{12}$/.test($("utr").value.replace(/\s/g, "")));
+  });
+
+  // ---------- UPI ----------
+  $("upiId").textContent = UPI_ID;
+  $("copyBtn").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(UPI_ID); }
+    catch (e) {
+      const t = document.createElement("textarea"); t.value = UPI_ID; document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); } catch (_) {} t.remove();
+    }
+    const b = $("copyBtn"); b.textContent = "Copied ✓"; b.classList.add("ok");
+    setTimeout(() => { b.textContent = "Copy"; b.classList.remove("ok"); }, 1800);
+  });
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    $("upiBtn").href = "upi://pay?pa=" + encodeURIComponent(UPI_ID) + "&pn=" + encodeURIComponent(PAYEE_NAME) +
+                       "&am=" + PRICE + "&cu=INR&tn=" + encodeURIComponent("Projector booking");
+    $("upiBtn").classList.add("show");
+  }
+
+  // ---------- Submit ----------
+  function updateCta() {
+    const b = $("submit");
+    b.disabled = !selected;
+    b.textContent = selected ? "Request booking · ₹" + PRICE : "Pick a night first";
+  }
+
+  function fail(msg, fieldId) {
+    const e = $("err");
+    e.classList.remove("show"); void e.offsetWidth;
+    e.textContent = msg; e.classList.add("show");
+    if (fieldId) {
+      const f = $(fieldId).parentElement;
+      f.classList.remove("err"); void f.offsetWidth; f.classList.add("err");
+      $(fieldId).focus({ preventScroll: true });
+      f.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }
 
-  function checkDate() {
-    const d = $("date").value;
-    const status = taken.get(d);
-    if (!d) { showNote($("dateNote"), "", "ok"); $("submit").disabled = true; return; }
-    if (status) {
-      showNote($("dateNote"), status === "pending"
-        ? "Someone has requested this night and is waiting for confirmation. Please pick another."
-        : "This night is already booked. Please pick another.", "bad");
-      $("submit").disabled = true;
-    } else {
-      showNote($("dateNote"), "✓ " + prettyDate(d) + " is available", "ok");
-      $("submit").disabled = false;
-    }
-  }
-
-  async function loadTaken() {
-    try {
-      const res = await fetch(SCRIPT_URL + "?action=dates&_t=" + Date.now());
-      const data = await res.json();
-      taken = new Map((data.dates || []).map(x => [String(x.date), x.status === "booked" ? "booked" : "pending"]));
-      renderTaken();
-    } catch (e) {
-      $("takenList").replaceChildren(Object.assign(document.createElement("li"), { textContent: "Couldn't load — try refreshing" }));
-    }
-    checkDate();
-  }
-
-  $("date").addEventListener("change", checkDate);
-
-  $("form").addEventListener("submit", async e => {
-    e.preventDefault();
-    const note = $("formNote");
+  $("form").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    $("err").classList.remove("show");
     const v = id => $(id).value.trim();
     const phone = v("phone").replace(/[\s-]/g, "").replace(/^(\+?91)(\d{10})$/, "$2");
     const utr = v("utr").replace(/\s/g, "");
 
-    if (v("name").length < 2) return showNote(note, "Please enter your name.", "bad");
-    if (!/^[6-9]\d{9}$/.test(phone)) return showNote(note, "Please enter a valid 10-digit mobile number.", "bad");
-    if (!v("block") || !v("room")) return showNote(note, "Please enter your block and room.", "bad");
-    if (!/^\d{12}$/.test(utr)) return showNote(note, "The UTR must be 12 digits. Find it in your UPI app's payment details.", "bad");
-    showNote(note, "", "bad");
+    if (!selected) return fail("Pick a night on the calendar first.");
+    if (v("name").length < 2) return fail("Please enter your name.", "name");
+    if (!/^[6-9]\d{9}$/.test(phone)) return fail("Please enter a valid 10-digit WhatsApp number.", "phone");
+    if (!v("block")) return fail("Please enter your block.", "block");
+    if (!v("room")) return fail("Please enter your room number.", "room");
+    if (!/^\d{12}$/.test(utr)) return fail("The UTR must be 12 digits. You'll find it in your UPI app's payment details.", "utr");
 
     const btn = $("submit");
     btn.disabled = true;
-    btn.textContent = "Sending…";
+    btn.innerHTML = '<span class="spinner"></span>Sending…';
 
     const body = new URLSearchParams({
-      date: v("date"), name: v("name"), phone, block: v("block"), room: v("room"),
-      pickup: $("pickup").value, utr, website: $("website").value,
+      date: selected, name: v("name"), phone, block: v("block"), room: v("room"),
+      pickup, utr, website: $("website").value,
     });
 
     try {
@@ -228,22 +455,47 @@
         body: body.toString(),
       });
       const data = await res.json();
-      if (data.ok) {
-        $("formCard").style.display = "none";
-        $("doneText").textContent = "Night of " + prettyDate(v("date")) + ", pickup from " + $("pickup").value + ".";
-        $("done").style.display = "block";
-      } else {
-        showNote(note, data.error || "Something went wrong. Please try again.", "bad");
-        loadTaken();
-      }
+      if (data.ok) return success();
+      fail(data.error || "Something went wrong. Please try again.");
+      loadTaken();
     } catch (err) {
-      showNote(note, "Couldn't reach the server. Check your connection and try again.", "bad");
-    } finally {
-      btn.textContent = "Request booking";
-      if ($("formCard").style.display !== "none") checkDate();
+      fail("Couldn't reach the server. Check your connection and try again.");
     }
+    updateCta();
   });
 
+  function success() {
+    $("form").style.display = "none";
+    $("doneWhen").textContent = pretty(selected) + " · pickup at " + pickup.replace("Block 9 - ", "Block 9, ");
+    $("done").classList.add("show");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const colors = ["#ffb547", "#ff5f8f", "#8b6cff", "#3ddc97", "#f3f2f8"];
+    for (let i = 0; i < 70; i++) {
+      const c = document.createElement("div");
+      c.className = "confetti";
+      c.style.left = Math.random() * 100 + "vw";
+      c.style.background = colors[i % colors.length];
+      c.style.animationDuration = 2 + Math.random() * 2.5 + "s";
+      c.style.animationDelay = Math.random() * .6 + "s";
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 5500);
+    }
+  }
+
+  // ---------- Load taken nights ----------
+  async function loadTaken() {
+    try {
+      const res = await fetch(SCRIPT_URL + "?action=dates&_t=" + Date.now());
+      const data = await res.json();
+      taken = new Map((data.dates || []).map(x => [String(x.date), x.status === "booked" ? "booked" : "pending"]));
+      if (selected && taken.has(selected)) { selected = null; $("picked").classList.remove("show"); $("s1").classList.remove("done"); }
+    } catch (e) { /* calendar still works; server re-checks on submit */ }
+    renderCal();
+    updateCta();
+  }
+
+  renderCal();
   loadTaken();
 </script>
 </body>
